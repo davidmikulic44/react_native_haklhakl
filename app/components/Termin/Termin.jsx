@@ -80,7 +80,6 @@ const Termin = (props) => {
                     <Text style={[styles.playerAmountText, { color: playerAmountColor }]}>{props.playerAmount}/{props.maxPlayerAmount}</Text>
                 </View>
             </View>
-            
         </TouchableOpacity>
     )
 }
