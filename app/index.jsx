@@ -1,23 +1,44 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, StyleSheet, Image, ScrollView } from 'react-native';
-import { Link } from 'expo-router';
+import { Text, View, StyleSheet, Image, ScrollView, Button } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from './styles/colors.js'
 import Termin from './components/Termin/Termin.jsx'
+import termini from "./termini.jsx"
 import NoviTerminGumb from './components/PregledTermina/NoviTerminGumb.jsx';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {client} from './utils/KindeConfig.jsx'
 const footballIcon = require('../assets/icons/football.png')
 import { FontAwesome } from '@expo/vector-icons';
-
+import services from './utils/services.jsx'
 import { SelectList } from 'react-native-dropdown-select-list'
 
 export default function App() {
 	const [selected, setSelected] = React.useState("");
-	const data = [
-		{key:'1', value:'Osijek', disabled:false},
-		{key:'2', value:'Kutina'},
-		{key:'3', value:'Zagreb'}
-	]
+	const router=useRouter();
+  useEffect(()=>{
+    checkUserAuth();
+  },[])
+
+	const checkUserAuth=async()=> {
+    const result=await services.getData('login');
+    console.log(result)
+    if(!result) {
+		router.replace('/login')
+    }
+  }
+  const handleLogout = async () => {
+	const loggedOut = await client.logout();
+	if (loggedOut) {
+	  await services.storeData('login','false');
+		router.replace('/login')
+
+	}
+  };
+
+  const handleTermini = async() => {
+	router.replace('/termini');
+  }
 
     return (
         
@@ -27,63 +48,10 @@ export default function App() {
         ><ScrollView style={styles.scrollViewStyle}>
 			
             <View style={styles.header}>
-                <Image source={footballIcon} style={styles.headerIconStyle}/>
-                <Text style={styles.title}>Pregled termina</Text>
+                <Text style={styles.title}>index</Text>
+				<Button title='logout' onPress={handleLogout}></Button>
             </View>
-			<View style={styles.selectCityContainer}>
-				<SelectList 
-					setSelected={(val) => setSelected(val)} 
-					data={data} 
-					save="value"
-					dropdownStyles={{
-						backgroundColor: "#24252D",
-						width: "100%",
-					}}
-					dropdownTextStyles={{
-						color: colors.textPrimary
-					}}
-					boxStyles={ {
-						backgroundColor: "rgba(36, 37, 45, 0.5)",
-						minWidth: 335,
-						maxWidth: 335,
-						borderRadius: 10,
-						borderColor: "#3D3D3E",
-						borderWidth: 1,
-						height: 50,
-						alignItems: 'center',
-						color: colors.textPrimary,
-					}}
-					inputStyles={{
-						color: colors.textPrimary,
-						fontFamily: "IstokWeb-Regular"
-					}}
-					arrowicon={<FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />}
-					searchicon={<FontAwesome name="search" size={12} color={colors.textPrimary} />}  
-					dropdownItemStyles={{
-						height: 50,
-						justifyContent: 'center',
-						fontFamily: "IstokWeb-Regular",
-						fontSize: 39,
-					}}
-					placeholder="Odaberi grad"
-					searchPlaceholder="Traži grad"
-					search={false}
-					closeicon={<FontAwesome name="close" size={12} color={colors.textPrimary} />}
-					notFoundText="Traženi grad ne postoji."
-					
-
-				/>
-				<NoviTerminGumb></NoviTerminGumb>
-			</View>
-            <View style={styles.terminiContainer}>
-                <Termin fieldName="Srednjika" distance="0.7" time="Danas u 20:00" temperature="21" organizerName="davidm" playerAmount="10" maxPlayerAmount="10"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Utorak u 17:30" temperature="26" organizerName="davidm" playerAmount="5" maxPlayerAmount="10"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Četvrtak u 20:00" temperature="22" organizerName="davidm" playerAmount="3" maxPlayerAmount="12"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Četvrtak u 20:00" temperature="22" organizerName="davidm" playerAmount="3" maxPlayerAmount="12"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Četvrtak u 20:00" temperature="22" organizerName="davidm" playerAmount="3" maxPlayerAmount="12"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Četvrtak u 20:00" temperature="22" organizerName="davidm" playerAmount="3" maxPlayerAmount="12"/>
-                <Termin fieldName="Srednjika" distance="0.7" time="Četvrtak u 20:00" temperature="22" organizerName="davidm" playerAmount="3" maxPlayerAmount="10"/>
-            </View>
+			<Button title="termini" onPress={handleTermini}></Button>
             <StatusBar style="auto" />
             </ScrollView>  
         </LinearGradient>

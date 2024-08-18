@@ -10,11 +10,11 @@ const locationIcon = require('../../../assets/icons/location.png')
 const sunIcon = require('../../../assets/icons/sun.png')
 
 
-const Termin = (props) => {
-    const playerAmount = () => {
+const Termin = ({ id, fieldName, time, date, organizerName, playerAmount, maxPlayerAmount }) => {
+    const checkPlayerAmountIcon = () => {
         let playerAmountIcon;
         
-        if (props.maxPlayerAmount === "10") {
+        if (maxPlayerAmount === 10) {
             playerAmountIcon = require('../../../assets/icons/5v5.png');
         } else {
             playerAmountIcon = require('../../../assets/icons/6v6.png');
@@ -22,10 +22,10 @@ const Termin = (props) => {
         return playerAmountIcon;
     };
     let shoeIcon;
-    const checkPlayerAmount = () => {
+    const checkPlayerAmountColor = () => {
         let playerAmountColor;
         
-        if (props.playerAmount === "10") {
+        if (playerAmount === 10 || playerAmount === 12) {
             playerAmountColor = colors.textRed;
             shoeIcon = require('../../../assets/icons/shoeRed.png')
         }
@@ -37,13 +37,14 @@ const Termin = (props) => {
         return playerAmountColor;
     }
 
-    const playerAmountIcon = playerAmount();
-    const playerAmountColor = checkPlayerAmount();
-
+    const playerAmountIcon = checkPlayerAmountIcon();
+    const playerAmountColor = checkPlayerAmountColor();
+    const distance = 0.8;
+    const temperature = 28;
     const router = useRouter();
 
     const handlePress = () => {
-        router.push("/profile")
+        router.push({pathname: "/terminscreen", params: {id: id}})
     };
 
     return (
@@ -53,14 +54,14 @@ const Termin = (props) => {
                     <View style={styles.heading}>
                         <View style={styles.textWithIcon}>
                             <Image source={stadiumIcon} style={styles.stadiumIconStyle}/>
-                            <Text style={styles.fieldNameText}>{props.fieldName}</Text>
+                            <Text style={styles.fieldNameText}>{fieldName}</Text>
                         </View>
                         <View style={styles.textWithIcon}>
                             <Image source={locationIcon} style={styles.locationIconStyle}/>
-                            <Text style={styles.text}>{props.distance}km</Text>
+                            <Text style={styles.text}>{distance}km</Text>
                         </View>
                     </View>
-                    <Text style={styles.termTimeText}>{props.time}</Text>
+                    <Text style={styles.termTimeText}>{time}</Text>
                 </View>
                 <View style={styles.topRight}>
                     <Image source={playerAmountIcon} style={styles.playerAmountStyleIcon}/>
@@ -68,16 +69,16 @@ const Termin = (props) => {
             </View>
             <View style={styles.textWithIcon}>
                 <Image source={sunIcon} style={styles.sunIconStyle}/>
-                <Text style={styles.text}>{props.temperature}°</Text>
+                <Text style={styles.text}>{temperature}°</Text>
             </View>
             <View style={styles.footer}>
                 <Text style={styles.organizerText}>
                 Organizira 
-                    <Text style={styles.organizerNameStyle}> @{props.organizerName} </Text>
+                    <Text style={styles.organizerNameStyle}> @{organizerName} </Text>
                 </Text>
                 <View style={styles.textWithIcon}>
                     <Image source={shoeIcon} style={styles.shoeIconStyle} />
-                    <Text style={[styles.playerAmountText, { color: playerAmountColor }]}>{props.playerAmount}/{props.maxPlayerAmount}</Text>
+                    <Text style={[styles.playerAmountText, { color: playerAmountColor }]}>{playerAmount}/{maxPlayerAmount}</Text>
                 </View>
             </View>
         </TouchableOpacity>

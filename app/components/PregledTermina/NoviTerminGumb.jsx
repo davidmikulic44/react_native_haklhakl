@@ -7,7 +7,7 @@ const NoviTerminGumb = () => {
     const router = useRouter();
 
     const handlePress = () => {
-        router.push("/profile")
+        router.push("/newtermin");
     };
 
 

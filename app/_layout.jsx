@@ -2,7 +2,6 @@ import { StyleSheet, Text, View } from "react-native"
 import { Slot, SplashScreen, Stack } from 'expo-router'
 import { useFonts } from 'expo-font';
 import { useEffect } from "react";
-
 SplashScreen.preventAutoHideAsync();
 
 const RootLayout = () => {
@@ -19,8 +18,8 @@ const RootLayout = () => {
 
 	
   	return (
-		<Stack>
-			<Stack.Screen name="index" options= {{ headerShown: false }}/>
+		<Stack screenOptions= {{ headerShown: false }}>
+			<Stack.Screen name="index" />
 		</Stack>
 	)
 }

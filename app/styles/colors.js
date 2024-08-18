@@ -5,4 +5,7 @@ export const colors = {
     textGreen: "#55FFC2",
     textSecondary: "#D3D3D3",
     textRed: "#FF5555",
+    buttonGreen: "#17A04E",
+    white: "#FFFFFF",
+    selected: "#003300",
 }
