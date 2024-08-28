@@ -6,6 +6,8 @@ export const colors = {
     textSecondary: "#D3D3D3",
     textRed: "#FF5555",
     buttonGreen: "#17A04E",
+    buttonRed: "#f54242",
     white: "#FFFFFF",
     selected: "#003300",
+    accent: "#3D3D3E"
 }

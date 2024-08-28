@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, FlatList, Modal } from 'react-native';
+import {
+  View, Text, TextInput, Button, StyleSheet, TouchableOpacity, FlatList,
+  Modal, KeyboardAvoidingView, ScrollView, TouchableWithoutFeedback, Keyboard, Platform,
+  Image
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from './utils/SupabaseConfig.jsx';
-import {client} from './utils/KindeConfig.jsx'
+import { client } from './utils/KindeConfig.jsx';
 import { colors } from './styles/colors.js';
 import { FontAwesome } from '@expo/vector-icons';
-
+import { useRouter } from 'expo-router';
+const newTerminIcon = require('../assets/icons/newtermin.png');
 export default function NewTerminScreen() {
+  // All state variables
   const [cityList, setCityList] = useState([]);
   const [playgroundList, setPlaygroundList] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
@@ -16,15 +22,13 @@ export default function NewTerminScreen() {
   const [dateOption, setDateOption] = useState('');
   const [time, setTime] = useState(new Date());
   const [description, setDescription] = useState('');
-
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showPlaygroundDropdown, setShowPlaygroundDropdown] = useState(false);
   const [showTeamSizeDropdown, setShowTeamSizeDropdown] = useState(false);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [timePickerModalVisible, setTimePickerModalVisible] = useState(false);
-
   const [selectedDay, setSelectedDay] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     getCityList();
@@ -38,63 +42,56 @@ export default function NewTerminScreen() {
 
   const handleCreate = async () => {
     try {
-        // Fetch user details
-        const user = await client.getUserDetails();
-        
-        if (!user || !user.given_name) {
-          throw new Error("User details are incomplete or unavailable.");
-        }
-    
-        // Format user name
-        const userName = `${user.given_name} ${user.family_name.charAt(0)}.`; // David M.
-        const userId = user.id
-        // Determine the maximum number of players based on team size
-        const maxPlayers = teamSize === '5 vs 5' ? 10 : 12;
-    
-        // Construct the date from selectedDay and time
-        const currentDate = new Date();
-    const selectedDate = new Date(currentDate);
-    if (dateOption === 'Danas') {
-      selectedDate.setDate(currentDate.getDate());
-    } else if (dateOption === 'Sutra') {
-      selectedDate.setDate(currentDate.getDate() + 1);
-    } else {
-      // For other days, we'll assume it's the same week
-      const daysOfWeek = ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'];
-      selectedDate.setDate(currentDate.getDate() + (daysOfWeek.indexOf(dateOption) - currentDate.getDay() + 7) % 7);
-    }
+      const user = await client.getUserDetails();
 
-    // Extract the time part
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    const formattedTime = `${hours}:${minutes}:${seconds}`;
-    
-        // Insert termin into the database
-        const { data, error } = await supabase.from('termins').insert([
-            {
-              city_id: selectedCity,
-              playground_id: selectedPlayground,
-              time: formattedTime, // Insert time part only
-              date: selectedDate.toISOString().split('T')[0], // Save only date part
-              created_by: userName,
-              description,
-              max_players: maxPlayers,
-              current_players: 1,
-              user_id: userId
-            }
-          ]);
-      
-          if (error) {
-            console.error("Error saving termin:", error);
-          } else {
-            console.log("Termin saved successfully:", data);
-            // Clear form or show success message
-          }
-        } catch (error) {
-          console.error("An error occurred:", error.message);
+      if (!user || !user.given_name) {
+        throw new Error("User details are incomplete or unavailable.");
+      }
+
+      const userName = `${user.given_name} ${user.family_name.charAt(0)}.`;
+      const userId = user.id;
+      const maxPlayers = teamSize === '5 vs 5' ? 10 : 12;
+
+      const currentDate = new Date();
+      const selectedDate = new Date(currentDate);
+      if (dateOption === 'Danas') {
+        selectedDate.setDate(currentDate.getDate());
+      } else if (dateOption === 'Sutra') {
+        selectedDate.setDate(currentDate.getDate() + 1);
+      } else {
+        const daysOfWeek = ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'];
+        selectedDate.setDate(currentDate.getDate() + (daysOfWeek.indexOf(dateOption) - currentDate.getDay() + 7) % 7);
+      }
+
+      const hours = time.getHours().toString().padStart(2, '0');
+      const minutes = time.getMinutes().toString().padStart(2, '0');
+      const seconds = time.getSeconds().toString().padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}:${seconds}`;
+
+      const { data, error } = await supabase.from('termins').insert([
+        {
+          city_id: selectedCity,
+          playground_id: selectedPlayground,
+          time: formattedTime,
+          date: selectedDate.toISOString().split('T')[0],
+          created_by: userName,
+          description,
+          max_players: maxPlayers,
+          current_players: 1,
+          user_id: userId
         }
-    };
+      ]);
+
+      if (error) {
+        console.error("Error saving termin:", error);
+      } else {
+        console.log("Termin saved successfully:", data);
+        router.navigate('..', { relativeToDirectory: true });
+      }
+    } catch (error) {
+      console.error("An error occurred:", error.message);
+    }
+  };
 
   const getCityList = async () => {
     const { data, error } = await supabase.from('cities').select('*');
@@ -118,35 +115,13 @@ export default function NewTerminScreen() {
     return str.replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  const handleSave = async () => {
-    const { data, error } = await supabase.from('termins').insert([
-      {
-        city_id: selectedCity,
-        playground_id: selectedPlayground,
-        team_size: teamSize,
-        date_option: dateOption,
-        time,
-        description,
-      }
-    ]);
-    if (error) {
-      console.error("Error saving termin:", error);
-    } else {
-      console.log("Termin saved successfully:", data);
-      // Clear form or show success message
-    }
-  };
-
   const handleTimeChange = (event, selectedDate) => {
     if (event.type === 'set') {
-      // Update the time state with the selected date.
       setTime(selectedDate || time);
-      // Do not close the modal here; only close it on 'Spremi' button press.
     }
   };
 
   const saveTime = () => {
-    setShowTimePicker(false);
     setTimePickerModalVisible(false);
   };
 
@@ -154,10 +129,7 @@ export default function NewTerminScreen() {
     const daysOfWeek = ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'];
     const today = new Date();
     const dayOffset = today.getDay();
-    const days = [];
-
-    days.push('Danas');
-    days.push('Sutra');
+    const days = ['Danas', 'Sutra'];
 
     for (let i = 2; i <= 6; i++) {
       const dayIndex = (dayOffset + i) % 7;
@@ -182,128 +154,119 @@ export default function NewTerminScreen() {
     </TouchableOpacity>
   );
 
-  const renderHeader = () => (
-    <>
-      <Text style={styles.label}>Odaberi grad</Text>
-      <TouchableOpacity style={styles.dropdown} onPress={() => setShowCityDropdown(!showCityDropdown)}>
-        <Text style={styles.dropdownText}>{selectedCity ? cityList.find(c => c.key === selectedCity)?.value : 'Odaberi grad'}</Text>
-        <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
-      </TouchableOpacity>
-      {showCityDropdown && (
-        <FlatList
-          data={cityList}
-          renderItem={({ item }) => renderDropdownItem(item, setSelectedCity)}
-          keyExtractor={(item) => item.key}
-          style={styles.dropdownList}
-        />
-      )}
-
-      <Text style={styles.label}>Odaberi igralište</Text>
-      <TouchableOpacity style={styles.dropdown} onPress={() => setShowPlaygroundDropdown(!showPlaygroundDropdown)}>
-        <Text style={styles.dropdownText}>{selectedPlayground ? playgroundList.find(pg => pg.key === selectedPlayground)?.value : 'Odaberi igralište'}</Text>
-        <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
-      </TouchableOpacity>
-      {showPlaygroundDropdown && (
-        <FlatList
-          data={playgroundList}
-          renderItem={({ item }) => renderDropdownItem(item, setSelectedPlayground)}
-          keyExtractor={(item) => item.key}
-          style={styles.dropdownList}
-        />
-      )}
-
-      <Text style={styles.label}>Odaberi timsku opciju</Text>
-      <TouchableOpacity style={styles.dropdown} onPress={() => setShowTeamSizeDropdown(!showTeamSizeDropdown)}>
-        <Text style={styles.dropdownText}>{teamSize}</Text>
-        <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
-      </TouchableOpacity>
-      {showTeamSizeDropdown && (
-        <FlatList
-          data={[{ key: '5 vs 5', value: '5 vs 5' }, { key: '6 vs 6', value: '6 vs 6' }]}
-          renderItem={({ item }) => renderDropdownItem(item, setTeamSize)}
-          keyExtractor={(item) => item.key}
-          style={styles.dropdownList}
-        />
-      )}
-
-      <Text style={styles.label}>Odaberi dan</Text>
-      <View style={styles.dateSelector}>
-
-        <View style={styles.dateGrid}>
-          {getDaysOfWeek().map((day, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.gridButton,
-                selectedDay === day && { backgroundColor: colors.selected },
-              ]}
-              onPress={() => {
-                setDateOption(day);
-                setSelectedDay(day);
-              }}
-            >
-              <Text style={styles.gridButtonText}>{day}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <Text style={styles.label}>Odaberi vrijeme</Text>
-      <TouchableOpacity style={styles.timePicker} onPress={() => setTimePickerModalVisible(true)}>
-        <Text style={styles.dropdownText}>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.label}>Opis</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        multiline
-        numberOfLines={4}
-        value={description}
-        onChangeText={setDescription}
-        placeholder="Unesite opis termina"
-        placeholderTextColor={colors.textPrimary}
-      />
-
-      <Button title="Spremi termin" onPress={handleCreate} />
-    </>
-  );
-
   return (
     <LinearGradient
       colors={[colors.gradient0, colors.gradient1]}
       style={styles.container}
     >
-      <FlatList
-        ListHeaderComponent={renderHeader}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.listContent}
-      />
+    
+      <KeyboardAvoidingView
+        style={{marginTop: 60}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+      
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+          
+            <View style={styles.componentContainer}>
+              <View style={styles.headerText}>
+                <Image source={newTerminIcon} style={styles.headerIconStyle} />
+                <Text style={styles.title}>Novi termin</Text>
+              </View>
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowCityDropdown(!showCityDropdown)}>
+                <Text style={styles.dropdownText}>{selectedCity ? cityList.find(c => c.key === selectedCity)?.value : 'Odaberi grad'}</Text>
+                <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
+              </TouchableOpacity>
+              {showCityDropdown && (
+                <FlatList
+                  data={cityList}
+                  renderItem={({ item }) => renderDropdownItem(item, setSelectedCity)}
+                  keyExtractor={(item) => item.key.toString()}
+                  style={styles.dropdownList}
+                />
+              )}
 
-      {timePickerModalVisible && (
-        <Modal
-          transparent={true}
-          visible={timePickerModalVisible}
-          onRequestClose={() => setTimePickerModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <DateTimePicker
-                value={time}
-                mode="time"
-                display="spinner"
-                onChange={handleTimeChange}
-                style={styles.timePickerComponent}
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowPlaygroundDropdown(!showPlaygroundDropdown)}>
+                <Text style={styles.dropdownText}>{selectedPlayground ? playgroundList.find(pg => pg.key === selectedPlayground)?.value : 'Odaberi igralište'}</Text>
+                <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
+              </TouchableOpacity>
+              {showPlaygroundDropdown && (
+                <FlatList
+                  data={playgroundList}
+                  renderItem={({ item }) => renderDropdownItem(item, setSelectedPlayground)}
+                  keyExtractor={(item) => item.key.toString()}
+                  style={styles.dropdownList}
+                />
+              )}
+
+              <Text style={styles.label}>Odaberi timsku opciju</Text>
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowTeamSizeDropdown(!showTeamSizeDropdown)}>
+                <Text style={styles.dropdownText}>{teamSize}</Text>
+                <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
+              </TouchableOpacity>
+              {showTeamSizeDropdown && (
+                <FlatList
+                  data={[{ key: '5 vs 5', value: '5 vs 5' }, { key: '6 vs 6', value: '6 vs 6' }]}
+                  renderItem={({ item }) => renderDropdownItem(item, setTeamSize)}
+                  keyExtractor={(item) => item.key.toString()}
+                  style={styles.dropdownList}
+                />
+              )}
+
+              <Text style={styles.label}>Odaberi dan</Text>
+              <View style={styles.dateSelector}>
+                <View style={styles.dateOptionContainer}>
+                  <TouchableOpacity style={styles.dropdown} onPress={() => setShowDateDropdown(!showDateDropdown)}>
+                    <Text style={styles.dropdownText}>{dateOption || 'Odaberi dan'}</Text>
+                    <FontAwesome name="chevron-down" size={12} color={colors.textPrimary} />
+                  </TouchableOpacity>
+                  {showDateDropdown && (
+                    <FlatList
+                      data={getDaysOfWeek().map(day => ({ key: day, value: day }))}
+                      renderItem={({ item }) => renderDropdownItem(item, setDateOption)}
+                      keyExtractor={(item) => item.key.toString()}
+                      style={styles.dropdownList}
+                    />
+                  )}
+                </View>
+                <TouchableOpacity onPress={() => setTimePickerModalVisible(true)}>
+                  <View style={styles.timePicker}>
+                    <Text style={styles.timePickerText}>{time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                placeholder="Unesi opis termina"
+                placeholderTextColor={colors.textPrimary}
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                style={styles.input}
               />
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={saveTime}
-              >
-                <Text style={styles.saveButtonText}>Spremi</Text>
+
+              <TouchableOpacity style={styles.buttonBackground} onPress={handleCreate}>
+                <Text style={styles.buttonBig}>Kreiraj termin</Text>
               </TouchableOpacity>
             </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+
+      <Modal visible={timePickerModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <DateTimePicker
+              value={time}
+              mode="time"
+              display="spinner"
+              onChange={handleTimeChange}
+            />
+            <Button title="Spremi" onPress={saveTime} />
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -312,126 +275,138 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  listContent: {
-    padding: 16,
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 8,
-    color: colors.textPrimary,
+  componentContainer: {
+    borderRadius: 10,
   },
   dropdown: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    padding: 8,
-    marginVertical: 4,
-    backgroundColor: '#121E2D',
+    borderColor: colors.accent
   },
   dropdownText: {
-    flex: 1,
     color: colors.textPrimary,
+    fontSize: 16,
+    fontFamily: 'IstokWeb-Regular'
   },
   dropdownList: {
-    maxHeight: 200,
-    backgroundColor: '#121E2D',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
+    marginBottom: 10,
+    borderColor: colors.accent,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    marginVertical: 4,
-    padding: 4,
   },
   dropdownItem: {
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
   dropdownItemText: {
     color: colors.textPrimary,
+    fontSize: 16,
+  },
+  label: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  buttonBig: {
+    color: colors.textPrimary,
+    fontFamily: "IstokWeb-Bold",
+    fontSize: 38,
+  },
+  buttonBackground: {
+    backgroundColor: colors.buttonGreen,
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    borderRadius: 26,
+    padding: 20,
+    maxHeight: 100,
+    width: 300,
+    alignSelf: 'center'
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerText: {
+    flex: 1,
+    flexDirection: 'row',
+    marginBottom: 20
+  },
+  headerIconStyle: {
+    height: 37,
+    width: 37,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    paddingLeft: 10,
+    color: colors.textPrimary,
+    fontFamily: "IstokWeb-Bold",
+    marginTop: 2,
+  },
+  dateOptionContainer: {
+    flex: 1,
+    marginRight: 10,
   },
   timePicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    padding: 8,
-    marginVertical: 4,
-    backgroundColor: '#121E2D',
+    backgroundColor: colors.dropdownBackground,
+    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    
   },
-  timePickerComponent: {
-    width: '100%',
-    backgroundColor: '#121E2D',
+  timePickerText: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontFamily: 'IstokWeb-Bold'
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    padding: 8,
-    marginVertical: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     color: colors.textPrimary,
+    borderRadius: 5,
+    padding: 15,
+    marginBottom: 20,
+    height: 100,
+    textAlignVertical: 'top',
+    borderColor: colors.accent,
+    borderWidth: 1,
+    fontFamily: 'IstokWeb-Regular',
+    fontSize: 18
   },
-  textArea: {
-    minHeight: 100,
+  button: {
+    backgroundColor: colors.buttonBackground,
+    paddingVertical: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: colors.buttonText,
+    fontSize: 16,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButton: {
-    marginTop: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-    padding: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 10,
-    fontFamily: "IstokWeb-Bold",
-    fontSize: 25
-  },
-  dateSelector: {
-    marginVertical: 8,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    padding: 8,
-    backgroundColor: '#121E2D',
-    marginVertical: 4,
-  },
-  dateButtonText: {
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  dateGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginVertical: 8,
-  },
-  gridButton: {
-    width: '24%',
-    margin: '1%',
-    padding: 12,
-    backgroundColor: '#1C2C3A',
-    borderRadius: 4,
-    alignItems: 'center',
-  },
-  gridButtonText: {
-    color: colors.textPrimary,
-    textAlign: 'center',
+    backgroundColor: colors.componentBackground,
+    padding: 20,
+    marginHorizontal: 20,
+    borderRadius: 10,
   },
 });

@@ -1,5 +1,5 @@
-import { Text, View, StyleSheet, Image, ScrollView } from 'react-native';
-import React from 'react'
+import { Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react'
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from './styles/colors.js'
 import { TouchableOpacity } from 'react-native';
@@ -7,7 +7,15 @@ import {client} from './utils/KindeConfig.jsx'
 import services from './utils/services.jsx'
 import {supabase} from './utils/SupabaseConfig.jsx'
 import {useRouter} from 'expo-router'
+
+const logoIcon = require('../assets/images/logo.png')
 export default function LoginScreen() {
+
+  useEffect(() => {
+    StatusBar.setBarStyle(Platform.OS === 'ios'? 'light-content': 'default')
+  },[]);
+
+
   const router = useRouter()
   const handleSignIn = async () => {
     const token = await client.login();
@@ -15,7 +23,7 @@ export default function LoginScreen() {
       await services.storeData('login','true')
       const user = await client.getUserDetails();
       checkUser(user);
-      router.replace('/termini')
+      router.replace('/')
       
     }
   };
@@ -69,21 +77,34 @@ export default function LoginScreen() {
         style={styles.container}
         ><ScrollView style={styles.scrollViewStyle}>
         <View style={styles.header}>
-        <Text style={styles.title}>LoginScreen</Text>
+          <Image source={logoIcon} style={styles.logo}></Image>
         </View>
       <TouchableOpacity style={styles.buttonBackground} onPress={handleSignIn}>
-        <Text style={styles.buttonText}>Login/Signup</Text>
+        <Text style={styles.buttonBig}>Prijavi se</Text>
       </TouchableOpacity>
+      <Text style={styles.info}>*Prijavom prihvaćaš sve uvjete korištenja aplikacije.</Text>
             </ScrollView>  
         </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
-  buttonText: {
+  info: {
+    alignSelf: 'center',
+    marginTop: 10,
+    color: colors.textPrimary,
+    fontSize: 12,
+  },
+  logo: {
+    width: 400,
+    height: 100,
+    marginTop: 230,
+    marginBottom: 0,
+  },  
+  buttonBig: {
     color: colors.textPrimary,
     fontFamily: "IstokWeb-Bold",
-    fontSize: 36,
+    fontSize: 38,
   },
   buttonBackground: {
     backgroundColor: colors.buttonGreen,
@@ -92,6 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 26,
     padding: 20,
+    width: 300,
+    alignSelf: 'center'
   },
 container: {
     flex: 1,
@@ -102,7 +125,7 @@ container: {
   header : {
     marginTop: 60,
     marginBottom: 30,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignSelf: 'center',
     alignItems: 'center',
     

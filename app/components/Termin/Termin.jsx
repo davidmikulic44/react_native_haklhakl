@@ -46,6 +46,40 @@ const Termin = ({ id, fieldName, time, date, organizerName, playerAmount, maxPla
     const handlePress = () => {
         router.push({pathname: "/terminscreen", params: {id: id}})
     };
+    const formatTimeAndDate = (time, date) => {
+    const daysOfWeek = [
+      "NED",
+      "PON",
+      "UTO",
+      "SRI",
+      "ČET",
+      "PET",
+      "SUB"
+    ];
+
+    const [hour, minute] = time.split(':');
+    const terminDate = new Date(date);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (
+      terminDate.getDate() === today.getDate() &&
+      terminDate.getMonth() === today.getMonth() &&
+      terminDate.getFullYear() === today.getFullYear()
+    ) {
+      return `Danas u ${hour}:${minute}`;
+    } else if (
+      terminDate.getDate() === tomorrow.getDate() &&
+      terminDate.getMonth() === tomorrow.getMonth() &&
+      terminDate.getFullYear() === tomorrow.getFullYear()
+    ) {
+      return `Sutra u ${hour}:${minute}`;
+    } else {
+      const dayName = daysOfWeek[terminDate.getDay()];
+      return `${dayName} u ${hour}:${minute}`;
+    }
+  };
 
     return (
         <TouchableOpacity onPress={handlePress} style={styles.container}>
@@ -56,10 +90,6 @@ const Termin = ({ id, fieldName, time, date, organizerName, playerAmount, maxPla
                             <Image source={stadiumIcon} style={styles.stadiumIconStyle}/>
                             <Text style={styles.fieldNameText}>{fieldName}</Text>
                         </View>
-                        <View style={styles.textWithIcon}>
-                            <Image source={locationIcon} style={styles.locationIconStyle}/>
-                            <Text style={styles.text}>{distance}km</Text>
-                        </View>
                     </View>
                     <Text style={styles.termTimeText}>{time}</Text>
                 </View>
@@ -67,10 +97,7 @@ const Termin = ({ id, fieldName, time, date, organizerName, playerAmount, maxPla
                     <Image source={playerAmountIcon} style={styles.playerAmountStyleIcon}/>
                 </View>
             </View>
-            <View style={styles.textWithIcon}>
-                <Image source={sunIcon} style={styles.sunIconStyle}/>
-                <Text style={styles.text}>{temperature}°</Text>
-            </View>
+
             <View style={styles.footer}>
                 <Text style={styles.organizerText}>
                 Organizira 
