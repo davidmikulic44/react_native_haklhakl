@@ -8,7 +8,7 @@ import { colors } from './styles/colors.js';
 import { useFocusEffect } from '@react-navigation/native';
 import { Linking } from 'react-native';
 import * as Location from 'expo-location';
-
+import {useRouter} from 'expo-router'
 const TerminDetails = () => {
   const loadingGif = require('../assets/icons/loading.gif')
   const stadiumIcon = require('../assets/icons/stadium.png');
@@ -20,6 +20,7 @@ const TerminDetails = () => {
   const organizerIcon = require('../assets/icons/organizer.png');
   const mapsIcon = require('../assets/icons/maps.png');
   const route = useRoute();
+  const router=useRouter();
   const { id } = route.params; // Extract id from route params
 
   const [terminDetails, setTerminDetails] = useState(null);
@@ -695,7 +696,8 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: 100,
     width: 300,
-    alignSelf: 'center'
+    alignSelf: 'center',
+    marginBottom: 20
   },
   profileImage: {
     width: 40, // Adjust the size as needed
